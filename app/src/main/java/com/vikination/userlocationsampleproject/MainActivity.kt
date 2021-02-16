@@ -15,7 +15,9 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var binding :ActivityMainBinding
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-    private val arrayOfPermissions = arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
+
+    private val arrayOfPermissions = arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,34 +25,51 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, arrayOfPermissions, 10)
-            return
-        }
 
+        /* checking permission location before get Last Known Location
+            if All permissions is not granted show dialog to granted permissions by user
+         */
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                {
+                    // show dialog if all permissons is not granted
+                    ActivityCompat.requestPermissions(this, arrayOfPermissions, 10)
+                    return
+                }
+
+        // call loadLastKnownLocation on onCreate()
         loadLastKnownLocation()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    // after user granted/deny the permissions this function is invoked
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+                                            grantResults: IntArray) {
         when(requestCode){
+            // request code of checking permissions of location
             10 -> {
+                // if all permission is granted show toast and get last known location
                 if (grantResults.isNotEmpty() &&
                         grantResults.find { it == PackageManager.PERMISSION_DENIED } == null) {
-                    Toast.makeText(this@MainActivity, "All Permisson is granted", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "All Permisson is granted",
+                        Toast.LENGTH_SHORT).show()
                     loadLastKnownLocation()
-                } else {
-                    Toast.makeText(this@MainActivity, "You must granted all permissons in order to this function working properly ", Toast.LENGTH_SHORT).show()
+                } else { // if one or all permissons is not granted show Toast
+                    Toast.makeText(this@MainActivity,
+                        "You must granted all permissons in order to this function working properly ",
+                        Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission", "SetTextI18n")
     private fun loadLastKnownLocation(){
         fusedLocationProviderClient.lastLocation
                 .addOnSuccessListener {
-                    binding.locationText.text = "Last Known Location of this device is \n(${it.latitude},${it.longitude})"
+                    binding.locationText.text =
+                        "Last Known Location of this device is \n(${it.latitude},${it.longitude})"
                 }
     }
 }
